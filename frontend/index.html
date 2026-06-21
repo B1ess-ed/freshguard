@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f7f2" />
+    <title>FreshMind 智能冰箱</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="FreshMind 首页">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span></span>
+          <span>FreshMind</span>
+        </a>
+
+        <nav class="main-nav" aria-label="主导航">
+          <button class="nav-item active" data-view="dashboard"><span class="nav-icon">⌂</span><span>总览</span></button>
+          <button class="nav-item" data-view="inventory"><span class="nav-icon">▦</span><span>食材</span><span class="nav-badge" id="inventory-badge">0</span></button>
+          <button class="nav-item" data-view="insights"><span class="nav-icon">⌁</span><span>趋势</span></button>
+          <button class="nav-item" data-view="assistant"><span class="nav-icon">✦</span><span>智能体</span></button>
+          <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>设置</span></button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <div class="board-card">
+            <span class="status-dot"></span>
+            <div><strong>K1 MUSE Pi Pro</strong><small>设备在线 · Bianbu 2.1</small></div>
+          </div>
+          <button class="profile-button" aria-label="查看用户信息"><span class="avatar">SZ</span><span><strong>家庭冰箱</strong><small>管理员</small></span><span>···</span></button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">星期六 · 2026 年 6 月 20 日</p>
+            <h1 id="page-title">早上好，冰箱一切正常</h1>
+          </div>
+          <div class="top-actions">
+            <span class="live-pill"><i></i>实时数据</span>
+            <button class="icon-button" id="notification-button" aria-label="通知">♢<b>2</b></button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboard-view">
+          <div class="hero-grid">
+            <article class="climate-card card">
+              <div class="card-heading">
+                <div><span class="section-label">箱内环境</span><h2>舒适且稳定</h2></div>
+                <button class="more-button" aria-label="更多">•••</button>
+              </div>
+              <div class="climate-readings">
+                <div class="reading primary">
+                  <span class="reading-icon temperature-icon">↟</span>
+                  <div><span class="reading-label">当前温度</span><strong><span id="temperature">4.2</span><small>°C</small></strong><span class="range-good">适宜范围 2–6°C</span></div>
+                </div>
+                <div class="reading">
+                  <span class="reading-icon humidity-icon">◉</span>
+                  <div><span class="reading-label">当前湿度</span><strong><span id="humidity">62</span><small>%</small></strong><span class="range-neutral">较昨日下降 3%</span></div>
+                </div>
+              </div>
+              <div class="mini-chart" aria-label="最近12小时温湿度趋势图">
+                <div class="chart-grid"></div>
+                <svg viewBox="0 0 600 120" preserveAspectRatio="none" role="img">
+                  <defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#59b979" stop-opacity=".24"/><stop offset="1" stop-color="#59b979" stop-opacity="0"/></linearGradient></defs>
+                  <path class="area" d="M0,78 C45,70 58,86 104,69 S165,45 208,61 S280,80 323,52 S389,28 430,42 S510,75 600,38 L600,120 L0,120 Z"/>
+                  <path class="line" d="M0,78 C45,70 58,86 104,69 S165,45 208,61 S280,80 323,52 S389,28 430,42 S510,75 600,38"/>
+                  <circle cx="600" cy="38" r="5"/>
+                </svg>
+                <div class="chart-labels"><span>00:00</span><span>04:00</span><span>08:00</span><span>现在</span></div>
+              </div>
+            </article>
+
+            <article class="door-card card">
+              <div class="card-heading"><span class="section-label">冰箱门</span><span class="safe-tag" id="door-tag">已关闭</span></div>
+              <button class="door-visual" id="door-toggle" aria-label="模拟切换冰箱门状态">
+                <span class="fridge-body"><span class="fridge-display">04°</span><span class="fridge-handle"></span><span class="fridge-split"></span></span>
+              </button>
+              <div class="door-copy"><h2 id="door-title">安全关闭</h2><p id="door-detail">上次打开于 08:42，持续 18 秒</p></div>
+              <div class="door-stats"><div><small>今日开门</small><strong>7 次</strong></div><div><small>平均时长</small><strong>21 秒</strong></div></div>
+            </article>
+          </div>
+
+          <div class="section-header inventory-header">
+            <div><span class="section-label">食材管理</span><h2>冰箱里有什么</h2></div>
+            <button class="text-button" data-jump="inventory">查看全部 <span>→</span></button>
+          </div>
+
+          <div class="inventory-strip" id="inventory-strip"></div>
+
+          <div class="bottom-grid">
+            <article class="card freshness-card">
+              <div class="card-heading"><div><span class="section-label">保鲜提醒</span><h2>需要你的注意</h2></div><span class="warning-count">2 项</span></div>
+              <div class="reminder-list">
+                <div class="reminder urgent"><span class="food-emoji">🥬</span><div><strong>生菜即将过期</strong><p>建议今天食用 · 剩余约 1 天</p></div><button aria-label="查看生菜详情">→</button></div>
+                <div class="reminder"><span class="food-emoji">🥛</span><div><strong>牛奶余量较低</strong><p>估计剩余 22% · 可加入清单</p></div><button aria-label="查看牛奶详情">→</button></div>
+              </div>
+            </article>
+
+            <article class="card assistant-card">
+              <div class="assistant-orb"><i></i><i></i><i></i></div>
+              <div><span class="section-label light">FreshMind 智能体</span><h2>今天想吃点什么？</h2><p>我可以根据现有食材推荐菜谱，也能回答冰箱状态。</p></div>
+              <button class="ask-button" data-jump="assistant"><span>✦</span> 问问智能体</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="inventory-view">
+          <div class="section-header page-section-header"><div><span class="section-label">库存概览</span><h2 id="inventory-summary">正在读取库存...</h2></div><button class="primary-button" id="add-item">＋ 添加食材</button></div>
+          <div class="inventory-toolbar">
+            <div class="filter-row" aria-label="按状态筛选"><button class="filter active" data-filter="all">全部</button><button class="filter" data-filter="fresh">状态良好</button><button class="filter" data-filter="soon">临期</button><button class="filter" data-filter="expired">已过期</button><button class="filter" data-filter="low">余量不足</button></div>
+            <label class="category-filter">分类<select id="category-filter"><option value="">全部分类</option></select></label>
+          </div>
+          <div class="inventory-grid" id="inventory-grid" aria-live="polite"></div>
+        </section>
+
+        <section class="view" id="insights-view">
+          <div class="metric-grid">
+            <article class="metric-card"><span>今日平均温度</span><strong>4.4°C</strong><small class="positive">稳定在目标范围</small></article>
+            <article class="metric-card"><span>今日平均湿度</span><strong>63%</strong><small>比昨日低 3%</small></article>
+            <article class="metric-card"><span>开门总时长</span><strong>2m 27s</strong><small class="positive">比昨日少 18%</small></article>
+            <article class="metric-card"><span>系统在线率</span><strong>99.9%</strong><small class="positive">运行稳定</small></article>
+          </div>
+          <article class="card large-chart-card"><div class="card-heading"><div><span class="section-label">24 小时趋势</span><h2>环境变化</h2></div><div class="legend"><span><i class="temp"></i>温度</span><span><i class="humid"></i>湿度</span></div></div><div class="placeholder-chart"><div class="bar" style="--h:44%"></div><div class="bar" style="--h:52%"></div><div class="bar" style="--h:48%"></div><div class="bar" style="--h:62%"></div><div class="bar" style="--h:58%"></div><div class="bar" style="--h:70%"></div><div class="bar" style="--h:64%"></div><div class="bar" style="--h:76%"></div><div class="bar" style="--h:66%"></div><div class="bar" style="--h:72%"></div><div class="bar" style="--h:61%"></div><div class="bar active" style="--h:68%"></div></div></article>
+        </section>
+
+        <section class="view" id="assistant-view">
+          <div class="chat-layout">
+            <article class="chat-panel card">
+              <div class="chat-header"><div class="assistant-orb small"><i></i><i></i><i></i></div><div><h2>FreshMind 智能体</h2><p><span class="status-dot" id="assistant-status-dot"></span><span id="assistant-status">正在连接本地模型...</span></p></div></div>
+              <div class="messages" id="messages"><div class="message bot">你好！我会结合冰箱中的实时库存回答问题，也可以根据现有食材推荐菜谱。</div></div>
+              <form class="chat-form" id="chat-form"><input id="chat-input" placeholder="例如：冰箱里还有牛奶吗？" autocomplete="off"/><button aria-label="发送">↑</button></form>
+            </article>
+            <aside class="suggestion-panel"><span class="section-label">快捷提问</span><button class="suggestion">现在温度是多少？</button><button class="suggestion">有哪些食材快过期？</button><button class="suggestion">用现有食材推荐一道菜</button><button class="suggestion">今天开门了几次？</button></aside>
+          </div>
+        </section>
+
+        <section class="view" id="settings-view">
+          <article class="card settings-card"><div class="card-heading"><div><span class="section-label">环境阈值</span><h2>监测与告警设置</h2></div></div><label>目标温度范围 <span>2°C – 6°C</span><input type="range" min="0" max="10" value="6" /></label><label>湿度告警上限 <span>80%</span><input type="range" min="40" max="100" value="80" /></label><label>开门提醒时间 <span>60 秒</span><input type="range" min="10" max="180" value="60" /></label><div class="setting-row"><div><strong>实时数据推送</strong><p>传感器变化时自动更新前端</p></div><button class="switch on" aria-label="切换实时数据推送"><i></i></button></div><div class="setting-row"><div><strong>语音播报告警</strong><p>发生异常时通过音箱提醒</p></div><button class="switch on" aria-label="切换语音播报告警"><i></i></button></div></article>
+        </section>
+      </main>
+
+      <dialog class="ingredient-dialog" id="ingredient-dialog">
+        <form id="ingredient-form" novalidate>
+          <div class="dialog-header">
+            <div><span class="section-label">库存维护</span><h2 id="dialog-title">添加食材</h2></div>
+            <button class="dialog-close" type="button" aria-label="关闭">×</button>
+          </div>
+          <input type="hidden" id="ingredient-id" />
+          <div class="form-grid">
+            <label class="field wide"><span>食材名称</span><input id="ingredient-name" name="name" maxlength="80" required autocomplete="off" /></label>
+            <label class="field"><span>分类</span><input id="ingredient-category" name="category" list="category-options" maxlength="40" required autocomplete="off" /></label>
+            <datalist id="category-options"><option value="蔬菜"></option><option value="水果"></option><option value="肉类"></option><option value="海鲜"></option><option value="乳制品"></option><option value="蛋类"></option><option value="饮品"></option><option value="主食"></option><option value="调味品"></option><option value="其他"></option></datalist>
+            <label class="field"><span>数量</span><input id="ingredient-quantity" name="quantity" type="number" min="0" max="1000000" step="any" required /></label>
+            <label class="field"><span>单位</span><select id="ingredient-unit" name="unit" required><option value="个">个</option><option value="盒">盒</option><option value="瓶">瓶</option><option value="袋">袋</option><option value="杯">杯</option><option value="颗">颗</option><option value="根">根</option><option value="克">克</option><option value="千克">千克</option><option value="毫升">毫升</option><option value="升">升</option></select></label>
+            <label class="field"><span>保质期</span><input id="ingredient-expiration" name="expiration_date" type="date" /></label>
+            <label class="field"><span>库存预警值</span><input id="ingredient-threshold" name="low_stock_threshold" type="number" min="0" max="1000000" step="any" placeholder="可选" /></label>
+            <label class="field wide"><span>备注</span><textarea id="ingredient-notes" name="notes" maxlength="500" rows="3"></textarea></label>
+          </div>
+          <p class="form-message" id="form-message" role="alert"></p>
+          <div class="dialog-actions"><button class="danger-button" id="delete-item" type="button">删除</button><span></span><button class="secondary-button dialog-cancel" type="button">取消</button><button class="primary-button" id="save-item" type="submit">保存</button></div>
+        </form>
+      </dialog>
+
+      <div class="confirm-modal" id="confirm-modal" hidden>
+        <div class="confirm-backdrop"></div>
+        <section class="confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+          <h2 id="confirm-title">删除这项食材？</h2><p id="confirm-copy">删除后无法恢复。</p>
+          <div class="dialog-actions"><span></span><button class="secondary-button" id="cancel-delete" type="button">取消</button><button class="danger-button solid" id="confirm-delete" type="button">确认删除</button></div>
+        </section>
+      </div>
+
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>

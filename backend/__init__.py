@@ -1,0 +1,1 @@
+"""FreshMind backend package."""
