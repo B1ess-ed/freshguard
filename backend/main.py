@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import threading
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -9,7 +11,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .database import Database
-from .ollama import OllamaClient, OllamaError
+from .environment import EnvironmentMonitor
+from .inventory_tools import route_inventory_query
+from .ollama import CancellationToken, OllamaCancelled, OllamaClient, OllamaError
 from .schemas import (
     ChatRequest,
     ChatResponse,
@@ -29,14 +33,20 @@ VALID_STATUSES = {"fresh", "soon", "expired", "low"}
 def create_app(
     database_path: Path | str | None = None,
     ollama_client: OllamaClient | None = None,
+    environment_monitor: EnvironmentMonitor | None = None,
 ) -> FastAPI:
     db = Database(database_path or os.getenv("FRESHMIND_DB_PATH", DEFAULT_DB_PATH))
     local_model = ollama_client or OllamaClient.from_env()
+    climate_monitor = environment_monitor or EnvironmentMonitor.from_env()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         db.initialize()
-        yield
+        climate_monitor.start()
+        try:
+            yield
+        finally:
+            climate_monitor.stop()
 
     application = FastAPI(
         title="FreshMind Inventory API",
@@ -45,6 +55,9 @@ def create_app(
     )
     application.state.db = db
     application.state.ollama = local_model
+    application.state.environment = climate_monitor
+    active_chats: dict[str, CancellationToken] = {}
+    active_chats_lock = threading.Lock()
 
     @application.get("/api/ingredients", response_model=list[Ingredient])
     def list_ingredients(
@@ -97,16 +110,51 @@ def create_app(
     @application.post("/api/chat", response_model=ChatResponse)
     def chat(payload: ChatRequest):
         inventory = db.list_ingredients()
+        inventory_route = route_inventory_query(
+            payload.message,
+            [message.model_dump() for message in payload.history[-10:]],
+            inventory,
+        )
+        if inventory_route:
+            return {
+                "answer": inventory_route.answer,
+                "source": "inventory",
+                "model": None,
+            }
         messages = [
             {"role": "system", "content": build_system_prompt(inventory)},
             *[message.model_dump() for message in payload.history[-10:]],
             {"role": "user", "content": f"/no_think\n{payload.message}"},
         ]
+        request_id = payload.request_id or str(uuid.uuid4())
+        cancellation = CancellationToken()
+        with active_chats_lock:
+            if request_id in active_chats:
+                raise HTTPException(status_code=409, detail="该回答请求正在处理中")
+            active_chats[request_id] = cancellation
         try:
-            answer = local_model.chat(messages)
+            answer = local_model.chat(messages, cancellation=cancellation)
+        except OllamaCancelled as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
         except OllamaError as error:
             raise HTTPException(status_code=503, detail=str(error)) from error
-        return {"answer": answer, "model": local_model.model}
+        finally:
+            with active_chats_lock:
+                active_chats.pop(request_id, None)
+        return {"answer": answer, "source": "model", "model": local_model.model}
+
+    @application.post("/api/chat/{request_id}/cancel")
+    def cancel_chat(request_id: str):
+        with active_chats_lock:
+            cancellation = active_chats.get(request_id)
+        if cancellation:
+            cancellation.cancel()
+            return {"cancelled": True}
+        return {"cancelled": False}
+
+    @application.get("/api/environment")
+    def get_environment():
+        return climate_monitor.snapshot()
 
     application.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
@@ -135,7 +183,7 @@ def build_system_prompt(inventory: list[dict]) -> str:
     inventory_text = "\n".join(lines) if lines else "（当前没有食材）"
     return f"""你是 FreshMind 智能冰箱的本地助手。
 请始终使用简洁、自然的中文回答，不展示思考过程。
-回答库存、余量、临期和菜谱问题时，只能依据下面提供的实时库存，不要虚构食材。
+库存事实查询会由后端工具处理。你只需处理菜谱建议和一般问答；涉及食材时只能依据下面提供的实时库存，不要虚构食材。
 可以给出生活化建议，但涉及食品安全时要明确提醒用户自行检查实际状态。
 当前温度为 4.2°C，湿度为 62%，冰箱门已关闭；这些环境数据目前是演示数据。
 你只能提供信息，不能声称已经新增、修改或删除库存。

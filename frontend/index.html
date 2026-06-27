@@ -54,20 +54,20 @@
               <div class="climate-readings">
                 <div class="reading primary">
                   <span class="reading-icon temperature-icon">↟</span>
-                  <div><span class="reading-label">当前温度</span><strong><span id="temperature">4.2</span><small>°C</small></strong><span class="range-good">适宜范围 2–6°C</span></div>
+                  <div><span class="reading-label">当前温度</span><strong><span id="temperature">--</span><small>°C</small></strong><span class="range-good">适宜范围 2–6°C</span></div>
                 </div>
                 <div class="reading">
                   <span class="reading-icon humidity-icon">◉</span>
-                  <div><span class="reading-label">当前湿度</span><strong><span id="humidity">62</span><small>%</small></strong><span class="range-neutral">较昨日下降 3%</span></div>
+                  <div><span class="reading-label">当前湿度</span><strong><span id="humidity">--</span><small>%</small></strong><span class="range-neutral">等待传感器数据</span></div>
                 </div>
               </div>
               <div class="mini-chart" aria-label="最近12小时温湿度趋势图">
                 <div class="chart-grid"></div>
                 <svg viewBox="0 0 600 120" preserveAspectRatio="none" role="img">
                   <defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#59b979" stop-opacity=".24"/><stop offset="1" stop-color="#59b979" stop-opacity="0"/></linearGradient></defs>
-                  <path class="area" d="M0,78 C45,70 58,86 104,69 S165,45 208,61 S280,80 323,52 S389,28 430,42 S510,75 600,38 L600,120 L0,120 Z"/>
-                  <path class="line" d="M0,78 C45,70 58,86 104,69 S165,45 208,61 S280,80 323,52 S389,28 430,42 S510,75 600,38"/>
-                  <circle cx="600" cy="38" r="5"/>
+                  <path class="area" id="mini-temp-area" d="M0,78 C45,70 58,86 104,69 S165,45 208,61 S280,80 323,52 S389,28 430,42 S510,75 600,38 L600,120 L0,120 Z"/>
+                  <path class="line" id="mini-temp-line" d="M0,78 C45,70 58,86 104,69 S165,45 208,61 S280,80 323,52 S389,28 430,42 S510,75 600,38"/>
+                  <circle id="mini-temp-point" cx="600" cy="38" r="5"/>
                 </svg>
                 <div class="chart-labels"><span>00:00</span><span>04:00</span><span>08:00</span><span>现在</span></div>
               </div>
@@ -118,12 +118,12 @@
 
         <section class="view" id="insights-view">
           <div class="metric-grid">
-            <article class="metric-card"><span>今日平均温度</span><strong>4.4°C</strong><small class="positive">稳定在目标范围</small></article>
-            <article class="metric-card"><span>今日平均湿度</span><strong>63%</strong><small>比昨日低 3%</small></article>
+            <article class="metric-card"><span>今日平均温度</span><strong id="avg-temperature">--°C</strong><small class="positive">稳定在目标范围</small></article>
+            <article class="metric-card"><span>今日平均湿度</span><strong id="avg-humidity">--%</strong><small id="humidity-status">等待传感器数据</small></article>
             <article class="metric-card"><span>开门总时长</span><strong>2m 27s</strong><small class="positive">比昨日少 18%</small></article>
             <article class="metric-card"><span>系统在线率</span><strong>99.9%</strong><small class="positive">运行稳定</small></article>
           </div>
-          <article class="card large-chart-card"><div class="card-heading"><div><span class="section-label">24 小时趋势</span><h2>环境变化</h2></div><div class="legend"><span><i class="temp"></i>温度</span><span><i class="humid"></i>湿度</span></div></div><div class="placeholder-chart"><div class="bar" style="--h:44%"></div><div class="bar" style="--h:52%"></div><div class="bar" style="--h:48%"></div><div class="bar" style="--h:62%"></div><div class="bar" style="--h:58%"></div><div class="bar" style="--h:70%"></div><div class="bar" style="--h:64%"></div><div class="bar" style="--h:76%"></div><div class="bar" style="--h:66%"></div><div class="bar" style="--h:72%"></div><div class="bar" style="--h:61%"></div><div class="bar active" style="--h:68%"></div></div></article>
+          <article class="card large-chart-card"><div class="card-heading"><div><span class="section-label">24 小时趋势</span><h2>环境变化</h2></div><div class="legend"><span><i class="temp"></i>温度</span><span><i class="humid"></i>湿度</span></div></div><div class="environment-chart" id="environment-chart"><div class="chart-grid"></div><svg viewBox="0 0 600 260" preserveAspectRatio="none" role="img" aria-label="温湿度历史曲线"><path class="env-line temp-line" id="history-temp-line"></path><path class="env-line humid-line" id="history-humidity-line"></path></svg><div class="chart-empty" id="environment-empty">等待 SHT30 传感器数据</div></div></article>
         </section>
 
         <section class="view" id="assistant-view">
@@ -131,7 +131,7 @@
             <article class="chat-panel card">
               <div class="chat-header"><div class="assistant-orb small"><i></i><i></i><i></i></div><div><h2>FreshMind 智能体</h2><p><span class="status-dot" id="assistant-status-dot"></span><span id="assistant-status">正在连接本地模型...</span></p></div></div>
               <div class="messages" id="messages"><div class="message bot">你好！我会结合冰箱中的实时库存回答问题，也可以根据现有食材推荐菜谱。</div></div>
-              <form class="chat-form" id="chat-form"><input id="chat-input" placeholder="例如：冰箱里还有牛奶吗？" autocomplete="off"/><button aria-label="发送">↑</button></form>
+              <form class="chat-form" id="chat-form"><input id="chat-input" placeholder="例如：冰箱里还有牛奶吗？" autocomplete="off"/><button id="chat-stop" class="chat-stop" type="button" hidden>停止</button><button id="chat-submit" type="submit" aria-label="发送">↑</button></form>
             </article>
             <aside class="suggestion-panel"><span class="section-label">快捷提问</span><button class="suggestion">现在温度是多少？</button><button class="suggestion">有哪些食材快过期？</button><button class="suggestion">用现有食材推荐一道菜</button><button class="suggestion">今天开门了几次？</button></aside>
           </div>

@@ -52,6 +52,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1000)
     history: list[ChatMessage] = Field(default_factory=list, max_length=10)
+    request_id: str | None = Field(default=None, min_length=8, max_length=80)
 
     @field_validator("message")
     @classmethod
@@ -64,7 +65,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
-    model: str
+    source: Literal["inventory", "model"]
+    model: str | None
 
 
 class ChatStatus(BaseModel):
